@@ -1,9 +1,13 @@
+const express = require('express');
 const axios = require('axios');
+require('dotenv').config();
+const app = express();
+app.use(express.json());
 
-async function getAllProjects() {
+const accessToken = process.env.accessToken;
+
+app.post('/fetch-project-id', async (req, res) => {
   try {
-    const accessToken = '1/1204997384918709:6c0f6eb9e5c34e5b5a6d0b0d13d99755'; // Replace with your Asana access token
-
     const response = await axios.get('https://app.asana.com/api/1.0/projects', {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -18,10 +22,13 @@ async function getAllProjects() {
       console.log('Project Name:', project.name);
       console.log('---');
     });
+    res.json({projects: projects });
   } catch (error) {
-    console.error('Failed to retrieve projects:', error.message);
+    console.error('Error sending bug to Asana:', error);
+    res.status(500).json({ error: 'Failed to send bug to Asana' });
   }
-}
+});
 
-getAllProjects();
-
+app.listen(5000, () => {
+  console.log("App is listening on Port 5000");
+});

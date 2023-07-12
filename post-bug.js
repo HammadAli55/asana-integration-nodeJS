@@ -1,45 +1,53 @@
-const axios = require('axios');
+const express = require("express");
+const axios = require("axios");
+require("dotenv").config();
+const app = express();
+app.use(express.json());
 
-async function postBug() {
+const accessToken = process.env.accessToken;
+const projectId = "1204997431814819";
+const sectionId = "1204997431814820";
+
+app.post("/bugs", async (req, res) => {
+  console.log("accessToken", typeof accessToken);
+  console.log("accessToken", accessToken);
+  const { title, description } = req.body;
+
   try {
-    const accessToken = '1/1204997384918709:6c0f6eb9e5c34e5b5a6d0b0d13d99755'; // Replace with your Asana access token
-    const projectId = '1204997431814819'; // Replace with the ID of your project
-    const sectionId = '1204997431814820'; // Replace with the ID of your Todo section
-
     const bugData = {
       data: {
-        name: 'Bug Title',
-        notes: JSON.stringify({
-          "Host App Version": "1.0.1 (2)",
-          "Device Model": "HUAWEI|STK-L21",  
-          "DEVICE OS": "Android 10",
-          "Reported By": "Hammad"
-        }),
-        // custom_fields: {
-        //   Priority: "Low",
-        //   Status: "On track",
-        // },
+        name: title,
+        notes: JSON.stringify(description),
         projects: [projectId],
-        memberships: [{
-          project: projectId,
-          section: sectionId,
-        }],
+        memberships: [
+          {
+            project: projectId,
+            section: sectionId,
+          },
+        ],
       },
     };
 
-    const response = await axios.post('https://app.asana.com/api/1.0/tasks', bugData, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await axios.post(
+      "https://app.asana.com/api/1.0/tasks",
+      bugData,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    console.log('Bug posted successfully!');
-    console.log('Bug ID:', response.data.data.gid);
+    console.log("Bug posted successfully!");
+    console.log("Bug ID:", response.data.data.gid);
+    res.json({ message: "Bug sent to Asana", taskId: response.data.data.id });
   } catch (error) {
-    console.error('Failed to post bug:', error.message);
+    console.error("Error sending bug to Asana:", error);
+    res.status(500).json({ error: "Failed to send bug to Asana" });
   }
-}
+});
 
-postBug();
-
+app.listen(5000, () => {
+  console.log("App is listening on Port 5000");
+});

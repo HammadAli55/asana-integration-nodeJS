@@ -5,38 +5,25 @@ const app = express();
 app.use(express.json());
 
 const accessToken = process.env.accessToken;
-const projectId = '1204997431814819';
-const sectionId = '1204997431814820';
+const projectId = '1204997431814819'; // Replace with the ID of your project
 
-
-app.post('/bugs', async (req, res) => {
-  console.log("accessToken", typeof(accessToken));
-  console.log("accessToken", accessToken);
-  const { title, description } = req.body;
-
+app.post('/fetch-section-id', async (req, res) => {
   try {
-    const bugData = {
-      data: {
-        name: title,
-        notes: JSON.stringify(description),
-        projects: [projectId],
-        memberships: [{
-          project: projectId,
-          section: sectionId,
-        }],
-      },
-    };
-
-    const response = await axios.post('https://app.asana.com/api/1.0/tasks', bugData, {
+    const response = await axios.get(`https://app.asana.com/api/1.0/projects/${projectId}/sections`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
-    console.log('Bug posted successfully!');
-    console.log('Bug ID:', response.data.data.gid);
-    res.json({ message: 'Bug sent to Asana', taskId: response.data.data.id });
+    const sections = response.data.data;
+    console.log('Sections:');
+    sections.forEach(section => {
+      console.log('Section ID:', section.gid);
+      console.log('Section Name:', section.name);
+      console.log('---');
+    });
+    res.json({projects: sections });
   } catch (error) {
     console.error('Error sending bug to Asana:', error);
     res.status(500).json({ error: 'Failed to send bug to Asana' });
